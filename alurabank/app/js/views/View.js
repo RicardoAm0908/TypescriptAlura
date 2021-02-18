@@ -1,11 +1,8 @@
 class View {
     constructor(seletor) {
-        this._elemento = document.querySelector(seletor);
-    }
-    template(model) {
-        throw new Error("Você deve implementar o método template");
+        this._elemento = $(seletor);
     }
     update(model) {
-        this._elemento.innerHTML = this.template(model);
+        this._elemento.html(this.template(model));
     }
 }

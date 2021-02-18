@@ -5,6 +5,6 @@ class MensagemView extends View {
         `;
     }
     update(model) {
-        this._elemento.innerHTML = this.template(model);
+        this._elemento.html(this.template(model));
     }
 }
