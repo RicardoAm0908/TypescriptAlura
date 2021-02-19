@@ -1,7 +1,9 @@
 import { NegociacoesView, MensagemView } from '../views/index';
-import { Negociacao, Negociacoes, NegociacaoParcial } from '../models/index';
+import { Negociacao, Negociacoes, NegociacaoParcial, Igualavel } from '../models/index';
 import { logarTempoDeExecucao, domInject, throttle } from '../helpers/Decorators/index';
 import { NegociacaoService } from '../services/index';
+import { imprime } from '../helpers/index';
+
 
 let timer = 0;
 
@@ -41,7 +43,7 @@ export class NegociacaoController {
         );
 
         this._negociacoes.adiciona(negociacao);
-
+        imprime(negociacao, this._negociacoes);
         this._negociacoesView.update(this._negociacoes);
         this._mensagemView.update('Negociação adicionada com sucesso!');
     }
@@ -54,21 +56,32 @@ export class NegociacaoController {
 
     
     @throttle()
-    importaDados() {
-        this
-            ._negociacaoService.obterNegociacoes(res => {
-                if(res.ok){
-                    return res;
-                }else{
-                    throw new Error(res.statusText);
-                }
-            })
-            .then(negociacoes => {
-                negociacoes.forEach(element => {
-                    this._negociacoes.adiciona(element)
-                });
-                this._negociacoesView.update(this._negociacoes);
-            });
+    async importaDados() {
+        try{
+            const negociacoesParaImportar = await this._negociacaoService
+                 .obterNegociacoes(res => {
+                     if(res.ok){
+                         return res;
+                     }else{
+                         throw new Error(res.statusText);
+                     }
+                 })
+                 const negociacoesJaImportadas = this._negociacoes.paraArray();
+     
+                 negociacoesParaImportar
+                     .filter(negociacao => 
+                         !negociacoesJaImportadas.some(jaImportada => 
+                             negociacao.ehIgual(jaImportada)
+                         )
+                     )
+                     .forEach(element => {
+                         this._negociacoes.adiciona(element)
+                     });
+                 this._negociacoesView.update(this._negociacoes);
+
+        }catch(ex) {
+            this._mensagemView.update(ex.message);
+        }
     }
 }
 
